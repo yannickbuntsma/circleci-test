@@ -2,7 +2,7 @@
 version: 2.1
 
 jobs:
-  build:
+  test:
       working_directory: ~/test
       # The primary container is an instance of the first image listed. The job's commands run in this container.
       docker:
@@ -12,3 +12,9 @@ jobs:
         - run:
             name: Run tests
             command: npm run test
+
+workflows:
+  version: 2
+  only_test:
+    jobs:
+      - test

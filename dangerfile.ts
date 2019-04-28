@@ -12,6 +12,9 @@ import { hasCorrectScope, hasCorrectSyntax } from './tools/danger'
 import { getChangedPackageFiles } from './tools/danger/get-changed-package-files'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
+const createMarkdownBlock = (title: string, body: string): ReturnType<typeof markdown> =>
+  markdown(`### ${title}\n\n\`\`\`${body}\`\`\``)
+
 const pr = danger.github.pr
 
 console.log(`Title:`, pr.title)
@@ -27,12 +30,15 @@ const touchedPackages = getPackageNames(touchedFiles)
 /**
  * Warn when PR titles doesn't match the convention
  */
-// Incorrect scope between the parentheses
-if (hasCorrectScope(pr.title, touchedPackages)) {
+
+// Scope of change doesn't match changes in packages
+console.log(`pr.title`, pr.title)
+console.log(`touchedPackages`, touchedPackages)
+if (!hasCorrectScope(pr.title, touchedPackages)) {
   fail(':no_entry: PR title does not have the correct scope')
 }
 // Incorrect general syntax (formatting)
-if (hasCorrectSyntax(pr.title)) {
+if (!hasCorrectSyntax(pr.title)) {
   fail(':no_entry: PR title does not have the correct formatting')
 }
 
@@ -40,7 +46,7 @@ if (hasCorrectSyntax(pr.title)) {
  * Warn if PR does not have a description
  */
 if (pr.body.length < 10) {
-  warn('Please add a description to your PR.')
+  warn('Please add a short description to your PR explaining your changes. :pencil2:')
 }
 
 /**
@@ -58,7 +64,7 @@ if (packageChanged && !lockfileChanged) {
  * Warn when origin branch is NOT coming from a fork (in other words, coming from the same repo)
  */
 if (pr.base.repo.full_name === pr.head.repo.full_name) {
-  warn('This PR is not coming from a fork. Tread lightly! :walking_man:')
+  warn('This PR is not coming from a fork. Tread lightly! :walking:')
 }
 
 /**
@@ -68,9 +74,9 @@ const filesWithoutTest = getFilesWithoutTestFile(touchedFiles)
 console.log(`filesWithoutTest`, filesWithoutTest)
 const list: string = filesWithoutTest.reduce<string>(
   (acc, fileName) => acc + '- ' + fileName + '\n',
-  'There are files changed that have no test changes associated with them: \n'
+  ''
 )
-markdown(`### :microscope: Missing tests\n\n\`\`\`${list}\`\`\``)
+createMarkdownBlock(':microscope: These files are missing tests', list)
 
 /**
  * Warn when PR is really big
@@ -82,10 +88,6 @@ if (danger.github.pr.additions + danger.github.pr.deletions > bigPrThreshold) {
     `Pull Request size seems relatively large. If this Pull Request contains multiple changes, split each into a separate PR will helps with faster and easier reviewing. :+1:`
   )
 }
-
-/**
- * Warn when scope of change doesn't match changes in packages
- */
 
 // Print bundle sizes (deltas?)
 

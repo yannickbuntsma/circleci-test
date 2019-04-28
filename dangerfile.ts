@@ -64,17 +64,13 @@ if (pr.base.repo.full_name === pr.head.repo.full_name) {
 /**
  * Warn when files have changed but there's no change to any corresponding spec files
  */
-const changedPackageFiles = getChangedPackageFiles(touchedFiles).map((file) => {
-  const { filename, extension } = splitPath(file)
-  return filename + extension
-})
-const filesWithoutTest = getFilesWithoutTestFile(changedPackageFiles)
-const sentence: string = filesWithoutTest.reduce<string>(
+const filesWithoutTest = getFilesWithoutTestFile(touchedFiles)
+console.log(`filesWithoutTest`, filesWithoutTest)
+const list: string = filesWithoutTest.reduce<string>(
   (acc, fileName) => acc + '- ' + fileName + '\n',
-  'The following files are missing tests: \n'
+  'There are files changed that have no test changes associated with them: \n'
 )
-console.log(`sentence`, sentence)
-markdown(`### TypeScript Fails\n\n\`\`\`${sentence}\`\`\``)
+markdown(`### :microscope: Missing tests\n\n\`\`\`${list}\`\`\``)
 
 /**
  * Warn when PR is really big

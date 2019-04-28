@@ -69,8 +69,11 @@ const changedPackageFiles = getChangedPackageFiles(touchedFiles).map((file) => {
   return filename + extension
 })
 const filesWithoutTest = getFilesWithoutTestFile(changedPackageFiles)
-console.log(`filesWithoutTest`, filesWithoutTest)
-warn()
+const sentence: string = filesWithoutTest.reduce<string>(
+  (acc, fileName) => acc + '- ' + fileName + '\n',
+  'The following files are missing tests: \n'
+)
+warn(sentence)
 
 /**
  * Warn when PR is really big

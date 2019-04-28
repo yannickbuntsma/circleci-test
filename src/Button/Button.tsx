@@ -1,9 +1,9 @@
 import * as React from 'react'
 
-interface Props {
+export interface Props {
   text: string
-  onClick: () => void
-  disabled: boolean
+  onClick?: () => void
+  disabled?: boolean
 }
 
 const Button: React.FC<Props> = ({ text, onClick, disabled }) => (

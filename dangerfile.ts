@@ -35,18 +35,18 @@ const touchedPackages = getPackageNames(touchedFiles)
 console.log(`pr.title`, pr.title)
 console.log(`touchedPackages`, touchedPackages)
 if (!hasCorrectScope(pr.title, touchedPackages)) {
-  fail(':no_entry: PR title does not have the correct scope')
+  fail(':telescope:  PR title does not have the correct scope')
 }
 // Incorrect general syntax (formatting)
 if (!hasCorrectSyntax(pr.title)) {
-  fail(':no_entry: PR title does not have the correct formatting')
+  fail(':memo:  PR title does not have the correct formatting')
 }
 
 /**
  * Warn if PR does not have a description
  */
 if (pr.body.length < 10) {
-  warn('Please add a short description to your PR explaining your changes. :pencil2:')
+  warn(':pencil2:  Please add a short description to your PR explaining your changes.')
 }
 
 /**
@@ -57,14 +57,14 @@ const lockfileChanged = danger.git.modified_files.includes('yarn.lock')
 if (packageChanged && !lockfileChanged) {
   const msg = 'Changes were made to package.json, but not to yarn.lock'
   const idea = 'Perhaps you need to run `yarn install`?'
-  fail(`${msg} - <i>${idea}</i>`)
+  fail(`:information_desk_person:  ${msg} - <i>${idea}</i>`)
 }
 
 /**
  * Warn when origin branch is NOT coming from a fork (in other words, coming from the same repo)
  */
 if (pr.base.repo.full_name === pr.head.repo.full_name) {
-  warn('This PR is not coming from a fork. Tread lightly! :walking:')
+  warn(':walking:  This PR is not coming from a fork. Tread lightly!')
 }
 
 /**

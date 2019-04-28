@@ -85,7 +85,7 @@ if (danger.github.pr.additions + danger.github.pr.deletions > bigPrThreshold) {
 }
 const smallPrThreshold = 100
 if (danger.github.pr.additions + danger.github.pr.deletions < smallPrThreshold) {
-  warn(':exclamation: Small PR!')
+  warn(`:exclamation: Small PR!<br /><i>Pull Request size seems very small. You did a good job!. :+1:</i>`)
   markdown(
     `Pull Request size seems very small. You did a good job!. :+1:`
   )

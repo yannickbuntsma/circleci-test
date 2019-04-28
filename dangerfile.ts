@@ -23,17 +23,13 @@ const modifiedFiles = danger.git.modified_files
 const newFiles = danger.git.created_files
 const touchedFiles = [...modifiedFiles, ...newFiles]
 
-console.log(`touchedFiles`, touchedFiles)
-
 const touchedPackages = getPackageNames(touchedFiles)
 
 /**
- * Warn when PR titles doesn't match the convention
+ * Fail when PR titles doesn't match the convention
  */
 
 // Scope of change doesn't match changes in packages
-console.log(`pr.title`, pr.title)
-console.log(`touchedPackages`, touchedPackages)
 if (!hasCorrectScope(pr.title, touchedPackages)) {
   fail(':telescope:  PR title does not have the correct scope')
 }
@@ -43,14 +39,14 @@ if (!hasCorrectSyntax(pr.title)) {
 }
 
 /**
- * Warn if PR does not have a description
+ * Fail if PR does not have a description
  */
 if (pr.body.length < 10) {
-  warn(':pencil2:  Please add a short description to your PR explaining your changes.')
+  fail(':pencil2:  Please add a short description to your PR explaining your changes.')
 }
 
 /**
- * Warn when yarn.lock file has changed but package.json has no changes
+ * Fail when yarn.lock file has changed but package.json has no changes
  */
 const packageChanged = danger.git.modified_files.includes('package.json')
 const lockfileChanged = danger.git.modified_files.includes('yarn.lock')
@@ -71,7 +67,6 @@ if (pr.base.repo.full_name === pr.head.repo.full_name) {
  * Warn when files have changed but there's no change to any corresponding spec files
  */
 const filesWithoutTest = getFilesWithoutTestFile(touchedFiles)
-console.log(`filesWithoutTest`, filesWithoutTest)
 const list: string = filesWithoutTest.reduce<string>(
   (acc, fileName) => acc + '- ' + fileName + '\n',
   ''
@@ -86,6 +81,13 @@ if (danger.github.pr.additions + danger.github.pr.deletions > bigPrThreshold) {
   warn(':exclamation: Big PR!')
   markdown(
     `Pull Request size seems relatively large. If this Pull Request contains multiple changes, split each into a separate PR will helps with faster and easier reviewing. :+1:`
+  )
+}
+const smallPrThreshold = 100
+if (danger.github.pr.additions + danger.github.pr.deletions < smallPrThreshold) {
+  warn(':exclamation: Small PR!')
+  markdown(
+    `Pull Request size seems very small. You did a good job!. :+1:`
   )
 }
 

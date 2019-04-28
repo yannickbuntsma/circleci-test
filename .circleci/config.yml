@@ -11,14 +11,14 @@ jobs:
         - checkout
         - run:
             name: Install dependencies
-            command: npm install
+            command: yarn install
         - run:
             name: Run DangerJS checks
-            command: npm run danger ci
+            command: yarn danger:ci
         - run:
             name: Run tests
             requires: install
-            command: npm run test
+            command: yarn test
 
 workflows:
   version: 2

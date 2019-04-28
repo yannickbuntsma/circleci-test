@@ -51,14 +51,14 @@ const lockfileChanged = danger.git.modified_files.includes('yarn.lock')
 if (packageChanged && !lockfileChanged) {
   const msg = 'Changes were made to package.json, but not to yarn.lock'
   const idea = 'Perhaps you need to run `yarn install`?'
-  warn(`${msg} - <i>${idea}</i>`)
+  fail(`${msg} - <i>${idea}</i>`)
 }
 
 /**
  * Warn when origin branch is NOT coming from a fork (in other words, coming from the same repo)
  */
 if (pr.base.repo.full_name === pr.head.repo.full_name) {
-  warn('This PR is not coming from a fork. Tread lightly! :swag:')
+  warn('This PR is not coming from a fork. Tread lightly! :walking_man:')
 }
 
 /**
@@ -73,7 +73,8 @@ const sentence: string = filesWithoutTest.reduce<string>(
   (acc, fileName) => acc + '- ' + fileName + '\n',
   'The following files are missing tests: \n'
 )
-warn(sentence)
+console.log(`sentence`, sentence)
+markdown(`### TypeScript Fails\n\n\`\`\`${sentence}\`\`\``)
 
 /**
  * Warn when PR is really big

@@ -2,9 +2,7 @@
 version: 2.1
 
 jobs:
-  test:
-      working_directory: ~/test
-      # The primary container is an instance of the first image listed. The job's commands run in this container.
+  dangerjs:
       docker:
         - image: circleci/node:10.15.3-jessie
       steps:
@@ -15,13 +13,9 @@ jobs:
         - run:
             name: Run DangerJS checks
             command: yarn danger:ci
-        - run:
-            name: Run tests
-            requires: install
-            command: yarn test
 
 workflows:
   version: 2
-  only_test:
+  only_danger:
     jobs:
-      - test
+      - dangerjs

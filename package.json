@@ -31,8 +31,12 @@
     "not op_mini all"
   ],
   "jest": {
+    "preset": "ts-jest",
+    "transform": {
+      "\\.(ts|js)x?$": "ts-jest"
+    },
     "setupFiles": [
-      "./src/setupTests.js"
+      "./src/setupTests.ts"
     ]
   },
   "devDependencies": {
@@ -40,6 +44,7 @@
     "enzyme": "^3.9.0",
     "enzyme-to-json": "^3.3.5",
     "jest": "^24.7.1",
-    "prettier": "^1.17.0"
+    "prettier": "^1.17.0",
+    "ts-jest": "^24.0.2"
   }
 }

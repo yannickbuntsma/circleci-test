@@ -115,8 +115,13 @@ const notFromFork: boolean = pr.base.repo.full_name === pr.head.repo.full_name
 /**
  * Warn when PACKAGE files have changed but there's no change to any corresponding spec files
  */
-const filesWithoutTest: string[] = getFilesWithoutTestFile(getChangedPackageFiles(touchedFiles))
+const filesWithoutTest: string[] = getFilesWithoutTestFile(touchedFiles)
 const hasMissingTests: boolean = filesWithoutTest.length > 0
+
+console.log({
+  touchedFiles,
+  'getFilesWithoutTestFile(touchedFiles)': getFilesWithoutTestFile(touchedFiles),
+})
 
 /**
  * Warn when PR is really big

@@ -9,8 +9,10 @@
 import { danger, GitHubPRDSL, markdown, warn } from 'danger'
 
 import { getPackageNames, hasCorrectSyntax } from './tools/danger'
-import { getChangedPackageFiles } from './tools/danger/get-changed-package-files'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
+
+console.log(`process.env`, process.env)
+console.log(`process.env.DANGER_GITHUB_API_TOKEN`, process.env.DANGER_GITHUB_API_TOKEN)
 
 const pr: GitHubPRDSL = danger.github.pr
 

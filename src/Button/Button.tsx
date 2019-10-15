@@ -1,5 +1,7 @@
 import * as React from 'react'
 
+// Sneaky
+
 export interface Props {
   text: string
   onClick?: () => void

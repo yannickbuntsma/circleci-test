@@ -12,6 +12,10 @@ import { danger, GitHubPRDSL, GitHubReview, markdown, warn } from 'danger'
 import { getPackageNames, hasCorrectSyntax } from './tools/danger'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
+interface ExtendedGitHubReview extends GitHubReview {
+  state: GitHubReview['state'] & 'CHANGES_REQUESTED'
+}
+
 const repo: string = 'yannickbuntsma/circleci-test'
 const botName: string = 'bot-yb'
 const pr: GitHubPRDSL = danger.github.pr
@@ -30,9 +34,7 @@ const doBotReview = async () => {
     `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
     shared
   )
-  const reviews: GitHubReview[] = await response.json()
-
-  console.log(`reviews`, reviews)
+  const reviews: ExtendedGitHubReview[] = await response.json()
 
   const url: string = `https://github.com/${repo}/pulls/${pr.number}`
 
@@ -42,7 +44,7 @@ const doBotReview = async () => {
 
   console.log(`reviews`, reviews)
   const botReview =
-    !!reviews && reviews.find((r) => r.user.login === botName && r.state === 'REQUEST_CHANGES')
+    !!reviews && reviews.find((r) => r.user.login === botName && r.state === 'CHANGES_REQUESTED')
 
   if (!API_KEY) {
     console.error(

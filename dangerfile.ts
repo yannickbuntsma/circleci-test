@@ -30,6 +30,7 @@ const requestChanges = async (message: string) => {
   const response: Response = await fetch(
     `https://api.github.com/repos/GrandVisionHQ/gv-core-components/pulls/${pr.number}/reviews`,
     {
+      method: 'POST',
       credentials: 'omit',
       headers: {
         authorization: `Bearer ${API_KEY}`,

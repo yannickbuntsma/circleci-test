@@ -121,7 +121,8 @@ const hasMissingTests: boolean = filesWithoutTest.length > 0
 
 console.log({
   touchedFiles,
-  'getFilesWithoutTestFile(touchedFiles)': getFilesWithoutTestFile(touchedFiles),
+  filesWithoutTest,
+  hasMissingTests,
 })
 
 /**

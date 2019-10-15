@@ -31,10 +31,10 @@ const requestChanges = async (message: string) => {
     `https://api.github.com/repos/GrandVisionHQ/gv-core-components/pulls/${pr.number}/reviews`,
     {
       credentials: 'omit',
-      headers: new Headers({
+      headers: {
         authorization: `Bearer ${API_KEY}`,
         'content-type': 'application/json',
-      }),
+      },
       body: JSON.stringify({
         event: 'REQUEST_CHANGES',
         body: message,

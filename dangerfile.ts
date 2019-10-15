@@ -171,7 +171,6 @@ if (hasMissingTests) {
     subtitle: `Please have another look at these test files and confirm that any added functionality is tested.`,
   })
 
-  fail(':microscope: This PR has untested changes. Please add them to be able to merge this PR.')
   requestChanges(
     'This PR has untested changes. Please add them to be able to merge this PR.\nIf you are certain all changed/added functionality is tested, please ask a peer to review the tests.'
   ).then((res) => console.log(res))

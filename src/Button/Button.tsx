@@ -1,8 +1,5 @@
 import * as React from 'react'
 
-// Should fail missing tests check
-// Add a fresh commit
-
 export interface Props {
   text: string
   onClick?: () => void

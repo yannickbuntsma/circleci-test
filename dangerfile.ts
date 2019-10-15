@@ -7,16 +7,27 @@
  */
 
 const fetch = require('node-fetch')
-import { danger, GitHubPRDSL, markdown, warn } from 'danger'
+import { danger, GitHubPRDSL, GitHubReview, markdown, warn } from 'danger'
 
 import { getPackageNames, hasCorrectSyntax } from './tools/danger'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
+const repo: string = 'yannickbuntsma/circleci-test'
 const pr: GitHubPRDSL = danger.github.pr
 
-const requestChanges = async (message: string) => {
+const doBotReview = async () => {
+  const botName: string = 'grandvisioncircleci'
   const API_KEY: string | undefined = process.env.DANGER_GITHUB_API_TOKEN
-  const url: string = `https://github.com/yannickbuntsma/circleci-test/pulls/${pr.number}`
+  const reviews: GitHubReview[] = await fetch(
+    `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`
+  )
+  const url: string = `https://github.com/${repo}/pulls/${pr.number}`
+
+  const requestChangesMessage =
+    'This PR has untested changes. Please add them to be able to merge this PR.\nIf you are certain all changed/added functionality is tested, please ask a peer to review the tests.'
+  const dismissalMessage = 'Missing tests seem to be added.'
+
+  const botReview = !!reviews && reviews.find((r) => r.user.login === botName)
 
   if (!API_KEY) {
     console.error(
@@ -25,33 +36,106 @@ const requestChanges = async (message: string) => {
     return
   }
 
-  const response: Response = await fetch(
-    `https://api.github.com/repos/yannickbuntsma/circleci-test/pulls/${pr.number}/reviews`,
-    {
+  const shared = {
+    credentials: 'omit',
+    headers: {
+      authorization: `Bearer ${API_KEY}`,
+      'content-type': 'application/json',
+    },
+  }
+
+  const submitCall = (message: string) => ({
+    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
+    settings: {
       method: 'POST',
-      credentials: 'omit',
-      headers: {
-        authorization: `Bearer ${API_KEY}`,
-        'content-type': 'application/json',
-      },
       body: JSON.stringify({
         event: 'REQUEST_CHANGES',
         body: message,
       }),
+    },
+  })
+  const updateCall = (reviewId: number, message: string) => ({
+    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}`,
+    settings: {
+      method: 'PUT',
+      body: JSON.stringify({
+        body: message,
+      }),
+    },
+  })
+  const dismissCall = (reviewId: number, message: string) => ({
+    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}/dismissals`,
+    settings: {
+      method: 'PUT',
+      body: JSON.stringify({
+        body: message,
+      }),
+    },
+  })
+
+  if (botReview && botReview.id) {
+    if (!hasMissingTests) {
+      // dismiss review
+      // PUT /repos/:owner/:repo/pulls/:pull_number/reviews/:review_id/dismissals
+      const call = dismissCall(botReview.id, dismissalMessage)
+      const response: Response = await fetch(call.url, {
+        ...shared,
+        ...call.settings,
+      })
+
+      if (!response.ok) {
+        console.error(
+          `Failed to post review on PR #${pr.number} (${url}), got: ${response.status} ${
+            response.statusText
+          }.`
+        )
+      }
+
+      console.log(`response`, response)
+
+      return response
+    } else {
+      // update review
+      // PUT /repos/:owner/:repo/pulls/:pull_number/reviews/:review_id
+      const call = updateCall(botReview.id, requestChangesMessage)
+      const response: Response = await fetch(call.url, {
+        ...shared,
+        ...call.settings,
+      })
+
+      if (!response.ok) {
+        console.error(
+          `Failed to update review ${botReview.id} on PR #${pr.number} (${url}), got: ${
+            response.status
+          } ${response.statusText}.`
+        )
+      }
+
+      console.log(`response`, response)
+
+      return response
     }
-  )
+  } else {
+    // post review
+    // POST /repos/:owner/:repo/pulls/:pull_number/reviews
+    const call = submitCall(requestChangesMessage)
+    const response: Response = await fetch(call.url, {
+      ...shared,
+      ...call.settings,
+    })
 
-  if (!response.ok) {
-    console.error(
-      `Failed to request changes on PR #${pr.number} (${url}) , got: ${response.status} ${
-        response.statusText
-      }.`
-    )
+    if (!response.ok) {
+      console.error(
+        `Failed to post review on PR #${pr.number} (${url}), got: ${response.status} ${
+          response.statusText
+        }.`
+      )
+    }
+
+    console.log(`response`, response)
+
+    return response
   }
-
-  console.log(`response`, response)
-
-  return response
 }
 
 const createMarkdownBlock = ({
@@ -175,9 +259,7 @@ if (hasMissingTests) {
     subtitle: `Please have another look at these test files and confirm that any added functionality is tested.`,
   })
 
-  requestChanges(
-    'This PR has untested changes. Please add them to be able to merge this PR.\nIf you are certain all changed/added functionality is tested, please ask a peer to review the tests.'
-  ).then((res) => console.log(res))
+  doBotReview().then((res) => console.log(res))
 }
 
 if (isBigPR) {

@@ -11,13 +11,10 @@ import { danger, GitHubPRDSL, markdown, warn } from 'danger'
 import { getPackageNames, hasCorrectSyntax } from './tools/danger'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
-console.log(`process.env`, process.env)
-console.log(`process.env.DANGER_GITHUB_API_TOKEN`, process.env.DANGER_GITHUB_API_TOKEN)
-
 const pr: GitHubPRDSL = danger.github.pr
 
 const requestChanges = async (message: string) => {
-  const API_KEY: string | undefined = process.env.GITHUB_ACCESS_TOKEN
+  const API_KEY: string | undefined = process.env.DANGER_GITHUB_API_TOKEN
   const url: string = `https://github.com/GrandVisionHQ/gv-core-components/pulls/${pr.number}`
 
   if (!API_KEY) {

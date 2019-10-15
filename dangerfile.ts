@@ -114,8 +114,9 @@ const notFromFork: boolean = pr.base.repo.full_name === pr.head.repo.full_name
 /**
  * Warn when PACKAGE files have changed but there's no change to any corresponding spec files
  */
+const excludedFiles = ['dangerfile.ts', 'package.json', 'yarn.lock']
 const filesWithoutTest: string[] = getFilesWithoutTestFile(touchedFiles).filter(
-  (f) => f !== 'dangerfile.ts'
+  (f) => !excludedFiles.includes(f)
 )
 const hasMissingTests: boolean = filesWithoutTest.length > 0
 

@@ -16,17 +16,31 @@ const repo: string = 'yannickbuntsma/circleci-test'
 const pr: GitHubPRDSL = danger.github.pr
 
 const doBotReview = async () => {
-  const botName: string = 'grandvisioncircleci'
   const API_KEY: string | undefined = process.env.DANGER_GITHUB_API_TOKEN
-  const reviews: GitHubReview[] = await fetch(
-    `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`
+  const shared = {
+    credentials: 'omit',
+    headers: {
+      authorization: `Bearer ${API_KEY}`,
+      'content-type': 'application/json',
+    },
+  }
+
+  const botName: string = 'grandvisioncircleci'
+  const response = await fetch(
+    `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
+    shared
   )
+  const reviews: GitHubReview[] = await response.json()
+
+  console.log(`reviews`, reviews)
+
   const url: string = `https://github.com/${repo}/pulls/${pr.number}`
 
   const requestChangesMessage =
     'This PR has untested changes. Please add them to be able to merge this PR.\nIf you are certain all changed/added functionality is tested, please ask a peer to review the tests.'
   const dismissalMessage = 'Missing tests seem to be added.'
 
+  console.log(`reviews`, reviews)
   const botReview = !!reviews && reviews.find((r) => r.user.login === botName)
 
   if (!API_KEY) {
@@ -36,42 +50,45 @@ const doBotReview = async () => {
     return
   }
 
-  const shared = {
-    credentials: 'omit',
-    headers: {
-      authorization: `Bearer ${API_KEY}`,
-      'content-type': 'application/json',
-    },
+  const submitCall = (message: string) => {
+    console.log('submitCall')
+    return {
+      url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
+      settings: {
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'REQUEST_CHANGES',
+          body: message,
+        }),
+      },
+    }
   }
-
-  const submitCall = (message: string) => ({
-    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
-    settings: {
-      method: 'POST',
-      body: JSON.stringify({
-        event: 'REQUEST_CHANGES',
-        body: message,
-      }),
-    },
-  })
-  const updateCall = (reviewId: number, message: string) => ({
-    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}`,
-    settings: {
-      method: 'PUT',
-      body: JSON.stringify({
-        body: message,
-      }),
-    },
-  })
-  const dismissCall = (reviewId: number, message: string) => ({
-    url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}/dismissals`,
-    settings: {
-      method: 'PUT',
-      body: JSON.stringify({
-        body: message,
-      }),
-    },
-  })
+  const updateCall = (reviewId: number, message: string) => {
+    console.log('updateCall')
+    return {
+      url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}`,
+      settings: {
+        method: 'PUT',
+        body: JSON.stringify({
+          body: message,
+        }),
+      },
+    }
+  }
+  const dismissCall = (reviewId: number, message: string) => {
+    console.log('dismissCall')
+    return {
+      url: `https://api.github.com/repos/${repo}/pulls/${
+        pr.number
+      }}/reviews/${reviewId}/dismissals`,
+      settings: {
+        method: 'PUT',
+        body: JSON.stringify({
+          body: message,
+        }),
+      },
+    }
+  }
 
   if (botReview && botReview.id) {
     if (!hasMissingTests) {

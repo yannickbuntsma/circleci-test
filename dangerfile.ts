@@ -16,19 +16,17 @@ const pr: GitHubPRDSL = danger.github.pr
 
 const requestChanges = async (message: string) => {
   const API_KEY: string | undefined = process.env.DANGER_GITHUB_API_TOKEN
-  const url: string = `https://github.com/GrandVisionHQ/gv-core-components/pulls/${pr.number}`
+  const url: string = `https://github.com/yannickbuntsma/circleci-test/pulls/${pr.number}`
 
   if (!API_KEY) {
     console.error(
-      `Did not find a GitHub API key and could not request changes on PR #${
-        pr.number
-      }. Received: ${API_KEY}`
+      `Did not find a GitHub API key and could not request changes on PR #${pr.number}.`
     )
     return
   }
 
   const response: Response = await fetch(
-    `https://api.github.com/repos/GrandVisionHQ/gv-core-components/pulls/${pr.number}/reviews`,
+    `https://api.github.com/repos/yannickbuntsma/circleci-test/pulls/${pr.number}/reviews`,
     {
       method: 'POST',
       credentials: 'omit',

@@ -6,6 +6,7 @@
  * following this guide: https://danger.systems/js/guides/the_dangerfile.html#using-danger-and-faking-being-on-a-ci
  */
 
+const fetch = require('node-fetch')
 import { danger, GitHubPRDSL, markdown, warn } from 'danger'
 
 import { getPackageNames, hasCorrectSyntax } from './tools/danger'

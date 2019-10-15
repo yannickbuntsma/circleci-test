@@ -13,6 +13,7 @@ import { getPackageNames, hasCorrectSyntax } from './tools/danger'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
 const repo: string = 'yannickbuntsma/circleci-test'
+const botName: string = 'bot-yb'
 const pr: GitHubPRDSL = danger.github.pr
 
 const doBotReview = async () => {
@@ -25,7 +26,6 @@ const doBotReview = async () => {
     },
   }
 
-  const botName: string = 'grandvisioncircleci'
   const response = await fetch(
     `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
     shared
@@ -41,7 +41,8 @@ const doBotReview = async () => {
   const dismissalMessage = 'Missing tests seem to be added.'
 
   console.log(`reviews`, reviews)
-  const botReview = !!reviews && reviews.find((r) => r.user.login === botName)
+  const botReview =
+    !!reviews && reviews.find((r) => r.user.login === botName && r.state === 'REQUEST_CHANGES')
 
   if (!API_KEY) {
     console.error(
@@ -51,7 +52,7 @@ const doBotReview = async () => {
   }
 
   const submitCall = (message: string) => {
-    console.log('submitCall')
+    console.log('===== Submitting review =====')
     return {
       url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews`,
       settings: {
@@ -64,7 +65,7 @@ const doBotReview = async () => {
     }
   }
   const updateCall = (reviewId: number, message: string) => {
-    console.log('updateCall')
+    console.log('===== Updating review =====')
     return {
       url: `https://api.github.com/repos/${repo}/pulls/${pr.number}}/reviews/${reviewId}`,
       settings: {
@@ -76,7 +77,7 @@ const doBotReview = async () => {
     }
   }
   const dismissCall = (reviewId: number, message: string) => {
-    console.log('dismissCall')
+    console.log('===== Dismissing review =====')
     return {
       url: `https://api.github.com/repos/${repo}/pulls/${
         pr.number
@@ -84,12 +85,13 @@ const doBotReview = async () => {
       settings: {
         method: 'PUT',
         body: JSON.stringify({
-          body: message,
+          message,
         }),
       },
     }
   }
 
+  console.log('botReview', botReview)
   if (botReview && botReview.id) {
     if (!hasMissingTests) {
       // dismiss review
@@ -107,10 +109,6 @@ const doBotReview = async () => {
           }.`
         )
       }
-
-      console.log(`response`, response)
-
-      return response
     } else {
       // update review
       // PUT /repos/:owner/:repo/pulls/:pull_number/reviews/:review_id
@@ -127,10 +125,6 @@ const doBotReview = async () => {
           } ${response.statusText}.`
         )
       }
-
-      console.log(`response`, response)
-
-      return response
     }
   } else {
     // post review
@@ -148,10 +142,6 @@ const doBotReview = async () => {
         }.`
       )
     }
-
-    console.log(`response`, response)
-
-    return response
   }
 }
 
@@ -267,7 +257,7 @@ if (outdatedLockfile) {
 }
 
 if (notFromFork) {
-  warn(':walking:  This PR is not coming from a fork. Tread lightly!')
+  warn(':bathtub:  This PR is not coming from a fork. Make sure to clean up after yourself.')
 }
 
 if (hasMissingTests) {
@@ -275,9 +265,9 @@ if (hasMissingTests) {
     title: ':microscope: These files are missing tests',
     subtitle: `Please have another look at these test files and confirm that any added functionality is tested.`,
   })
-
-  doBotReview().then((res) => console.log(res))
 }
+
+doBotReview()
 
 if (isBigPR) {
   warn(

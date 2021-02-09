@@ -12,6 +12,9 @@ import { hasCorrectScope, hasCorrectSyntax } from './tools/danger'
 import { getChangedPackageFiles } from './tools/danger/get-changed-package-files'
 import { getFilesWithoutTestFile } from './tools/danger/get-files-without-test-file'
 
+const createMarkdownBlock = (title: string, body: string): ReturnType<typeof markdown> =>
+  markdown(`### ${title}\n\n\`\`\`${body}\`\`\``)
+
 const pr = danger.github.pr
 
 console.log(`Title:`, pr.title)
@@ -20,60 +23,55 @@ const modifiedFiles = danger.git.modified_files
 const newFiles = danger.git.created_files
 const touchedFiles = [...modifiedFiles, ...newFiles]
 
-console.log(`touchedFiles`, touchedFiles)
-
 const touchedPackages = getPackageNames(touchedFiles)
 
 /**
- * Warn when PR titles doesn't match the convention
+ * Fail when PR titles doesn't match the convention
  */
-// Incorrect scope between the parentheses
-if (hasCorrectScope(pr.title, touchedPackages)) {
-  fail(':no_entry: PR title does not have the correct scope')
+
+// Scope of change doesn't match changes in packages
+if (!hasCorrectScope(pr.title, touchedPackages)) {
+  fail(':telescope:  PR title does not have the correct scope')
 }
 // Incorrect general syntax (formatting)
-if (hasCorrectSyntax(pr.title)) {
-  fail(':no_entry: PR title does not have the correct formatting')
+if (!hasCorrectSyntax(pr.title)) {
+  fail(':memo:  PR title does not have the correct formatting')
 }
 
 /**
- * Warn if PR does not have a description
+ * Fail if PR does not have a description
  */
 if (pr.body.length < 10) {
-  warn('Please add a description to your PR.')
+  fail(':pencil2:  Please add a short description to your PR explaining your changes.')
 }
 
 /**
- * Warn when yarn.lock file has changed but package.json has no changes
+ * Fail when yarn.lock file has changed but package.json has no changes
  */
 const packageChanged = danger.git.modified_files.includes('package.json')
 const lockfileChanged = danger.git.modified_files.includes('yarn.lock')
 if (packageChanged && !lockfileChanged) {
   const msg = 'Changes were made to package.json, but not to yarn.lock'
   const idea = 'Perhaps you need to run `yarn install`?'
-  warn(`${msg} - <i>${idea}</i>`)
+  fail(`:information_desk_person:  ${msg} - <i>${idea}</i>`)
 }
 
 /**
  * Warn when origin branch is NOT coming from a fork (in other words, coming from the same repo)
  */
 if (pr.base.repo.full_name === pr.head.repo.full_name) {
-  warn('This PR is not coming from a fork. Tread lightly! :swag:')
+  warn(':walking:  This PR is not coming from a fork. Tread lightly!')
 }
 
 /**
  * Warn when files have changed but there's no change to any corresponding spec files
  */
-const changedPackageFiles = getChangedPackageFiles(touchedFiles).map((file) => {
-  const { filename, extension } = splitPath(file)
-  return filename + extension
-})
-const filesWithoutTest = getFilesWithoutTestFile(changedPackageFiles)
-const sentence: string = filesWithoutTest.reduce<string>(
+const filesWithoutTest = getFilesWithoutTestFile(touchedFiles)
+const list: string = filesWithoutTest.reduce<string>(
   (acc, fileName) => acc + '- ' + fileName + '\n',
-  'The following files are missing tests: \n'
+  ''
 )
-warn(sentence)
+createMarkdownBlock(':microscope: These files are missing tests', list)
 
 /**
  * Warn when PR is really big
@@ -85,10 +83,13 @@ if (danger.github.pr.additions + danger.github.pr.deletions > bigPrThreshold) {
     `Pull Request size seems relatively large. If this Pull Request contains multiple changes, split each into a separate PR will helps with faster and easier reviewing. :+1:`
   )
 }
-
-/**
- * Warn when scope of change doesn't match changes in packages
- */
+const smallPrThreshold = 100
+if (danger.github.pr.additions + danger.github.pr.deletions < smallPrThreshold) {
+  warn(`:exclamation: Small PR!<br /><i>Pull Request size seems very small. You did a good job!. :+1:</i>`)
+  markdown(
+    `Pull Request size seems very small. You did a good job!. :+1:`
+  )
+}
 
 // Print bundle sizes (deltas?)
 
